@@ -239,7 +239,7 @@ function buildExplainPanel(q) {
 function renderQuestionCard(q, mode, extra = {}) {
   const card = document.createElement('div');
   card.className = 'q-card';
-  card.dataset.qid = q.id;
+  card.dataset.qid = q._uid;
 
   const unitName = unitMap[q.unit] || ('Unit ' + q.unit);
   const uVar = `var(--u${q.unit})`;
@@ -262,7 +262,7 @@ function renderQuestionCard(q, mode, extra = {}) {
   const optionsWrap = document.createElement('div');
   optionsWrap.className = 'options';
 
-  const browseEntry = mode === 'browse' ? getBrowseEntry(q.id) : null;
+  const browseEntry = mode === 'browse' ? getBrowseEntry(q._uid) : null;
 
   q.options.forEach((optText, i) => {
     const opt = document.createElement('button');
@@ -301,7 +301,7 @@ function renderQuestionCard(q, mode, extra = {}) {
       const optEl = e.target.closest('.option');
       if (!optEl || optEl.classList.contains('disabled')) return;
       browseEntry.selected = Number(optEl.dataset.idx);
-      rerenderBrowseCard(q);
+      card.replaceWith(renderQuestionCard(q, 'browse'));
     });
 
     const actions = document.createElement('div');
@@ -312,7 +312,7 @@ function renderQuestionCard(q, mode, extra = {}) {
     btn.textContent = browseEntry.revealed ? 'Hide Answer' : 'Show Answer';
     btn.addEventListener('click', () => {
       browseEntry.revealed = !browseEntry.revealed;
-      rerenderBrowseCard(q);
+      card.replaceWith(renderQuestionCard(q, 'browse'));
     });
     actions.appendChild(btn);
     card.appendChild(actions);
@@ -323,12 +323,6 @@ function renderQuestionCard(q, mode, extra = {}) {
   }
 
   return card;
-}
-
-function rerenderBrowseCard(q) {
-  const old = document.querySelector(`.q-card[data-qid="${CSS.escape(q.id)}"]`);
-  if (!old) return;
-  old.replaceWith(renderQuestionCard(q, 'browse'));
 }
 
 /* ---------------------------------------------------------
@@ -520,10 +514,14 @@ async function init() {
     if (r.status === 'fulfilled' && r.value && Array.isArray(r.value.questions)) {
       const yearNum = r.value.year || yearFiles[idx].year;
       const fileSubject = r.value.subject || 'General Paper';
-      r.value.questions.forEach(q => State.allQuestions.push({
+      r.value.questions.forEach((q, qi) => State.allQuestions.push({
         ...q,
         year: yearNum,
-        subject: q.subject || fileSubject
+        subject: q.subject || fileSubject,
+        // Internal-only unique key: file index + position in that file.
+        // Guaranteed unique across the whole question bank even if the
+        // "id" field from the JSON repeats across years/sessions.
+        _uid: `${idx}-${qi}`
       }));
     } else {
       console.warn('Could not load', yearFiles[idx].file, r.reason);

@@ -705,7 +705,7 @@ function buildExplainPanel(q) {
 function renderQuestionCard(q, mode, extra = {}) {
   const card = document.createElement('div');
   card.className = 'q-card';
-  card.dataset.qid = q.id;
+  card.dataset.qid = q._uid;
 
   const unitName = unitMap[q.unit] || ('Unit ' + q.unit);
   const uVar = `var(--u${q.unit})`;
@@ -1002,10 +1002,11 @@ async function init() {
     if (r.status === 'fulfilled' && r.value && Array.isArray(r.value.questions)) {
       const yearNum = r.value.year || yearFiles[idx].year;
       const fileSubject = r.value.subject || 'General Paper';
-      r.value.questions.forEach(q => State.allQuestions.push({
+      r.value.questions.forEach((q, qi) => State.allQuestions.push({
         ...q,
         year: yearNum,
-        subject: q.subject || fileSubject
+        subject: q.subject || fileSubject,
+        _uid: `${idx}-${qi}`
       }));
     } else {
       console.warn('Could not load', yearFiles[idx].file, r.reason);
