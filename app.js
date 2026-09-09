@@ -6,8 +6,7 @@
 const State = {
   manifest: null,
   allQuestions: [],
-  filters: { years: new Set(), sessions: new Set(), subjects: new Set(), units: new Set(), search: '' },
-  test: null
+  filters: { years: new Set(), sessions: new Set(), subjects: new Set(), units: new Set(), search: '' }
 };
 
 let unitMap = {};
@@ -39,12 +38,6 @@ async function fetchJSON(url) {
 function getBrowseEntry(qid) {
   if (!browseState.has(qid)) browseState.set(qid, { selected: null, revealed: false });
   return browseState.get(qid);
-}
-
-function switchView(id) {
-  ['browseView', 'testConfigView', 'testRunView', 'testResultView'].forEach(v => {
-    document.getElementById(v).classList.toggle('hidden', v !== id);
-  });
 }
 
 function setSidebarOpen(open) {
@@ -270,8 +263,6 @@ function renderQuestionCard(q, mode, extra = {}) {
   optionsWrap.className = 'options';
 
   const browseEntry = mode === 'browse' ? getBrowseEntry(q.id) : null;
-  const testAnswer = mode === 'test' ? State.test.answers[extra.index] : null;
-  const reviewAnswer = mode === 'review' ? extra.userAnswer : null;
 
   q.options.forEach((optText, i) => {
     const opt = document.createElement('button');
@@ -287,12 +278,6 @@ function renderQuestionCard(q, mode, extra = {}) {
         if (i === q.answer) { opt.classList.add('reveal-correct'); badgeText = '✓ Correct'; }
         else if (i === browseEntry.selected) { opt.classList.add('reveal-incorrect'); badgeText = '✗ Your pick'; }
       }
-    } else if (mode === 'test') {
-      if (testAnswer === i) opt.classList.add('selected');
-    } else if (mode === 'review') {
-      opt.classList.add('disabled');
-      if (i === q.answer) { opt.classList.add('reveal-correct'); badgeText = '✓ Correct'; }
-      else if (i === reviewAnswer) { opt.classList.add('reveal-incorrect'); badgeText = '✗ Your answer'; }
     }
 
     const key = document.createElement('span');
@@ -335,19 +320,6 @@ function renderQuestionCard(q, mode, extra = {}) {
     const panel = buildExplainPanel(q);
     if (!browseEntry.revealed) panel.classList.add('hidden');
     card.appendChild(panel);
-  }
-
-  if (mode === 'test') {
-    optionsWrap.addEventListener('click', (e) => {
-      const optEl = e.target.closest('.option');
-      if (!optEl) return;
-      State.test.answers[extra.index] = Number(optEl.dataset.idx);
-      renderCurrentTestQuestion();
-    });
-  }
-
-  if (mode === 'review') {
-    card.appendChild(buildExplainPanel(q));
   }
 
   return card;
@@ -496,200 +468,8 @@ function renderBrowseList() {
 }
 
 /* ---------------------------------------------------------
-   Practice test — config
+   Static event wiring
    --------------------------------------------------------- */
-function chipHTML(group, value, label, dotColor) {
-  const dot = dotColor ? `<span class="dot" style="width:8px;height:8px;border-radius:50%;background:${dotColor}"></span>` : '';
-  return `<label class="chip checked"><input type="checkbox" data-group="${group}" value="${value}" checked>${dot}${escapeHTML(String(label))}</label>`;
-}
-
-function getCheckedChipValues(containerId) {
-  return [...document.querySelectorAll(`#${containerId} input:checked`)].map(i => i.value);
-}
-
-function buildTestConfigUI() {
-  const years = [...new Set(State.allQuestions.map(q => q.year))].sort((a, b) => b - a);
-  document.getElementById('testYearChips').innerHTML =
-    years.map(y => chipHTML('testYear', y, y)).join('') ||
-    `<span style="color:var(--text-faint);font-size:13px;">No data loaded yet.</span>`;
-
-  document.getElementById('customUnitChips').innerHTML =
-    State.manifest.units.map(u => chipHTML('customUnit', u.id, u.name, `var(--u${u.id})`)).join('');
-
-  document.querySelectorAll('#testYearChips input, #customUnitChips input').forEach(inp => {
-    inp.addEventListener('change', () => inp.closest('.chip').classList.toggle('checked', inp.checked));
-  });
-}
-
-function getPool() {
-  const years = getCheckedChipValues('testYearChips').map(Number);
-  return State.allQuestions.filter(q => years.includes(q.year));
-}
-
-function startFullMock() {
-  const pool = getPool();
-  const qs = [];
-  State.manifest.units.forEach(u => {
-    const bucket = shuffle(pool.filter(q => q.unit === u.id));
-    qs.push(...bucket.slice(0, 5));
-  });
-  if (!qs.length) { alert('No questions available for the selected year(s) yet. Add some data first!'); return; }
-  startTest(shuffle(qs));
-}
-
-function startCustom() {
-  const pool = getPool();
-  const units = getCheckedChipValues('customUnitChips').map(Number);
-  const count = Math.max(1, parseInt(document.getElementById('customCount').value, 10) || 20);
-  const candidates = shuffle(pool.filter(q => units.includes(q.unit)));
-  const qs = candidates.slice(0, count);
-  if (!qs.length) { alert('No questions match the selected units/years yet.'); return; }
-  startTest(qs);
-}
-
-/* ---------------------------------------------------------
-   Practice test — run
-   --------------------------------------------------------- */
-function startTest(questions) {
-  State.test = {
-    questions,
-    answers: new Array(questions.length).fill(null),
-    current: 0,
-    startTime: Date.now(),
-    timerInterval: null,
-    finished: false
-  };
-  switchView('testRunView');
-  renderCurrentTestQuestion();
-  startTimer();
-}
-
-function renderCurrentTestQuestion() {
-  const t = State.test;
-  const idx = t.current;
-  const q = t.questions[idx];
-
-  document.getElementById('qPos').textContent = idx + 1;
-  document.getElementById('qTotal').textContent = t.questions.length;
-
-  const holder = document.getElementById('testQuestionHolder');
-  holder.innerHTML = '';
-  if (q.passage) holder.appendChild(passageBoxEl(q.passage));
-  holder.appendChild(renderQuestionCard(q, 'test', { index: idx }));
-
-  document.getElementById('prevQ').disabled = idx === 0;
-  document.getElementById('nextQ').textContent = idx === t.questions.length - 1 ? 'Finish →' : 'Next →';
-
-  updateQnavGrid();
-}
-
-function updateQnavGrid() {
-  const t = State.test;
-  const grid = document.getElementById('qnavGrid');
-  grid.innerHTML = '';
-  t.questions.forEach((q, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'qnav-btn' + (t.answers[i] != null ? ' answered' : '') + (i === t.current ? ' current' : '');
-    b.textContent = String(i + 1);
-    b.addEventListener('click', () => { t.current = i; renderCurrentTestQuestion(); });
-    grid.appendChild(b);
-  });
-}
-
-function startTimer() {
-  const el = document.getElementById('testTimer');
-  clearInterval(State.test.timerInterval);
-  State.test.timerInterval = setInterval(() => {
-    const secs = Math.floor((Date.now() - State.test.startTime) / 1000);
-    const mm = String(Math.floor(secs / 60)).padStart(2, '0');
-    const ss = String(secs % 60).padStart(2, '0');
-    el.textContent = `${mm}:${ss}`;
-  }, 1000);
-}
-
-function submitTest() {
-  clearInterval(State.test.timerInterval);
-  State.test.finished = true;
-  State.test.elapsedMs = Date.now() - State.test.startTime;
-  renderResults();
-  switchView('testResultView');
-}
-
-/* ---------------------------------------------------------
-   Practice test — results
-   --------------------------------------------------------- */
-function renderResults() {
-  const t = State.test;
-  let correct = 0, incorrect = 0, unanswered = 0;
-  const unitStats = {};
-
-  t.questions.forEach((q, i) => {
-    const a = t.answers[i];
-    if (a == null) unanswered++;
-    else if (a === q.answer) correct++;
-    else incorrect++;
-    unitStats[q.unit] = unitStats[q.unit] || { correct: 0, total: 0 };
-    unitStats[q.unit].total++;
-    if (a === q.answer) unitStats[q.unit].correct++;
-  });
-
-  const total = t.questions.length;
-  const pct = total ? Math.round((correct / total) * 100) : 0;
-  const mins = Math.floor(t.elapsedMs / 60000);
-  const secs = Math.floor((t.elapsedMs % 60000) / 1000);
-
-  document.getElementById('scoreCard').innerHTML = `
-    <div class="score-big">${pct}<span>%</span></div>
-    <div class="score-stats">
-      <div class="score-stat stat-correct"><b>${correct}</b>Correct</div>
-      <div class="score-stat stat-incorrect"><b>${incorrect}</b>Incorrect</div>
-      <div class="score-stat"><b>${unanswered}</b>Unanswered</div>
-      <div class="score-stat"><b>${total}</b>Total</div>
-      <div class="score-stat"><b>${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</b>Time taken</div>
-    </div>`;
-
-  const ub = document.getElementById('unitBreakdown');
-  ub.innerHTML = '';
-  Object.keys(unitStats).sort((a, b) => a - b).forEach(uid => {
-    const st = unitStats[uid];
-    const pctU = st.total ? Math.round((st.correct / st.total) * 100) : 0;
-    const row = document.createElement('div');
-    row.className = 'unit-bar-row';
-    row.innerHTML = `<span class="u-name">${escapeHTML(unitMap[uid] || ('Unit ' + uid))}</span>
-      <span class="unit-bar-track"><span class="unit-bar-fill" style="width:${pctU}%;"></span></span>
-      <span class="u-frac">${st.correct}/${st.total}</span>`;
-    ub.appendChild(row);
-  });
-
-  const rl = document.getElementById('reviewList');
-  rl.innerHTML = '';
-  let lastPassage = null;
-  t.questions.forEach((q, i) => {
-    if (q.passage && q.passage !== lastPassage) rl.appendChild(passageBoxEl(q.passage));
-    lastPassage = q.passage || null;
-    rl.appendChild(renderQuestionCard(q, 'review', { userAnswer: t.answers[i] }));
-  });
-}
-
-/* ---------------------------------------------------------
-   Mode tabs + static event wiring
-   --------------------------------------------------------- */
-function setTab(which) {
-  document.getElementById('tabBrowse').classList.toggle('active', which === 'browse');
-  document.getElementById('tabTest').classList.toggle('active', which === 'test');
-
-  const showFilters = which === 'browse';
-  document.getElementById('grpYear').classList.toggle('hidden', !showFilters);
-  document.getElementById('grpSession').classList.toggle('hidden', !showFilters);
-  document.getElementById('grpSubject').classList.toggle('hidden', !showFilters);
-  document.getElementById('grpUnit').classList.toggle('hidden', !showFilters);
-  document.querySelector('.sidebar-search').classList.toggle('hidden', !showFilters);
-
-  switchView(which === 'browse' ? 'browseView' : 'testConfigView');
-  closeSidebarOnMobile();
-}
-
 function wireStaticEvents() {
   document.getElementById('menuToggle').addEventListener('click', () => {
     const isOpen = document.getElementById('sidebar').classList.contains('open');
@@ -701,8 +481,8 @@ function wireStaticEvents() {
     h.addEventListener('click', () => document.getElementById(h.dataset.target).classList.toggle('collapsed'));
   });
 
-  document.getElementById('tabBrowse').addEventListener('click', () => setTab('browse'));
-  document.getElementById('tabTest').addEventListener('click', () => setTab('test'));
+  // "Practice Test" is a plain link (opens test.html in a new tab), so no
+  // click handler is needed here — the browser handles it natively.
 
   let searchDebounce;
   document.getElementById('searchBox').addEventListener('input', (e) => {
@@ -715,23 +495,6 @@ function wireStaticEvents() {
   });
 
   document.getElementById('resetFilters').addEventListener('click', resetFilters);
-
-  document.getElementById('startFullMock').addEventListener('click', startFullMock);
-  document.getElementById('startCustom').addEventListener('click', startCustom);
-
-  document.getElementById('prevQ').addEventListener('click', () => {
-    const t = State.test;
-    if (t.current > 0) { t.current--; renderCurrentTestQuestion(); }
-  });
-  document.getElementById('nextQ').addEventListener('click', () => {
-    const t = State.test;
-    if (t.current < t.questions.length - 1) { t.current++; renderCurrentTestQuestion(); }
-    else submitTest();
-  });
-  document.getElementById('submitTest').addEventListener('click', submitTest);
-
-  document.getElementById('retakeTest').addEventListener('click', () => startTest(shuffle(State.test.questions.slice())));
-  document.getElementById('backToSetup').addEventListener('click', () => switchView('testConfigView'));
 }
 
 /* ---------------------------------------------------------
@@ -771,7 +534,6 @@ async function init() {
     `${State.allQuestions.length} questions loaded from ${yearFiles.length} files`;
 
   buildFilterUI();
-  buildTestConfigUI();
   renderBrowseList();
   wireStaticEvents();
 }

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Test — UGC NET General Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+/* =========================================================
+   UGC NET Paper 1 — Practice Test (standalone)
+   Design tokens — kept in sync with the main app's style.css
+   ========================================================= */
+:root {
+  --navy-900: #121A32;
+  --navy-800: #1B2545;
+  --navy-700: #24305C;
+  --bg: #F5F6FA;
+  --surface: #FFFFFF;
+  --surface-2: #FAFAFD;
+  --text: #1A1D29;
+  --text-muted: #656B7C;
+  --text-faint: #9599A8;
+  --border: #E5E7F0;
+
+  --accent: #E3982E;
+  --accent-ink: #7A4C0B;
+  --accent-bg: #FBF0DD;
+
+  --link: #3E67E0;
+
+  --success: #1E9E5A;
+  --success-bg: #E6F7EE;
+  --success-border: #B9E7CD;
+
+  --danger: #D8434B;
+  --danger-bg: #FDECED;
+  --danger-border: #F3C4C7;
+
+  --u1: #E36A6A;  --u2: #E38A4A;  --u3: #E3B93E;  --u4: #8FBF4B;  --u5: #3FB88C;
+  --u6: #3FA7C9;  --u7: #4D8EDB;  --u8: #7B71E0;  --u9: #B15FCE;  --u10: #D65AA5;
+
+  --font-display: 'Sora', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(18, 26, 50, 0.06);
+  --shadow-md: 0 6px 20px rgba(18, 26, 50, 0.10);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; color: var(--navy-900); }
+button { font-family: inherit; }
+:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+
+.mono { font-family: var(--font-mono); }
+.hidden { display: none !important; }
+
+/* ---- Top bar (replaces sidebar in this standalone page) ---- */
+.topbar {
+  background: var(--navy-900);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: var(--shadow-md);
+}
+.topbar-brand {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-brand .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(227,152,46,0.14);
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.btn-close-tab {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #E9EBF5;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn-close-tab:hover { background: rgba(255,255,255,0.16); }
+
+/* ---- Main content ---- */
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+.main-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.main-header h2 { font-size: 21px; }
+.result-count { color: var(--text-muted); font-size: 13.5px; }
+
+.load-stat {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-bottom: 18px;
+}
+
+/* =========================================================
+   Question card (question / passage / options / explanation)
+   ========================================================= */
+.passage-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--text);
+}
+.passage-box .passage-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-ink);
+  display: block;
+  margin-bottom: 6px;
+}
+.passage-para {
+  margin: 0 0 10px;
+  white-space: pre-line;
+}
+.passage-para:last-child { margin-bottom: 0; }
+.passage-subhead {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--navy-900);
+  margin: 4px 0 8px;
+}
+.passage-table-wrap {
+  overflow-x: auto;
+  margin: 4px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.passage-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+.passage-table th, .passage-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+.passage-table thead th {
+  background: var(--surface);
+  color: var(--navy-900);
+  font-weight: 700;
+}
+.passage-table tbody tr:nth-child(even) { background: var(--surface); }
+.passage-table td:first-child, .passage-table th:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.q-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.tag .dot { width: 8px; height: 8px; border-radius: 50%; }
+.tag-subject { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.q-id { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+
+.q-text { font-size: 15.5px; font-weight: 600; margin-bottom: 14px; color: var(--navy-900); }
+.q-text .passage-para:last-child,
+.explain-panel .passage-para:last-child,
+.opt-notes .passage-para:last-child { margin-bottom: 0; }
+.q-text .passage-table-wrap,
+.opt-notes .passage-table-wrap { margin: 8px 0; font-weight: 400; }
+
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 13px;
+  cursor: pointer;
+  background: var(--surface);
+  font-size: 14px;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  appearance: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.option:hover { border-color: var(--link); }
+.option .opt-key {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 18px;
+  flex-shrink: 0;
+}
+.option.selected { border-color: var(--link); background: #EEF2FE; }
+.option.reveal-correct { border-color: var(--success-border); background: var(--success-bg); }
+.option.reveal-correct .opt-key { color: var(--success); }
+.option.reveal-incorrect { border-color: var(--danger-border); background: var(--danger-bg); }
+.option.reveal-incorrect .opt-key { color: var(--danger); }
+.option.disabled { cursor: default; }
+.option .badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.option.reveal-correct .badge { color: var(--success); }
+.option.reveal-incorrect .badge { color: var(--danger); }
+
+.q-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary { background: var(--navy-900); color: #fff; }
+.btn-primary:hover { background: var(--navy-800); }
+.btn-outline { background: #fff; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--link); color: var(--link); }
+.btn-accent { background: var(--accent); color: #2B1B02; }
+.btn-accent:hover { filter: brightness(0.95); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.explain-panel {
+  margin-top: 14px;
+  border-top: 1px dashed var(--border);
+  padding-top: 14px;
+  font-size: 13.5px;
+}
+.explain-panel h4 { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 6px; }
+.explain-panel .answer-line { margin-bottom: 10px; }
+.explain-panel .answer-line b { color: var(--success); }
+.opt-notes { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.opt-notes li { display: flex; gap: 8px; color: var(--text-muted); }
+.opt-notes li .opt-key { font-family: var(--font-mono); color: var(--text-faint); flex-shrink: 0; }
+.opt-notes li.is-correct { color: var(--text); }
+.opt-notes li.is-correct .opt-key { color: var(--success); font-weight: 700; }
+
+/* =========================================================
+   Empty state
+   ========================================================= */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state h3 { color: var(--navy-900); margin-bottom: 6px; }
+
+/* =========================================================
+   Practice test — config
+   ========================================================= */
+.test-cards { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 10px; }
+.test-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.test-card h3 { font-size: 16px; margin-bottom: 6px; }
+.test-card p.desc { color: var(--text-muted); font-size: 13.5px; margin: 0 0 14px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+.field input[type="number"] {
+  width: 100px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px;
+}
+.chip-set { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 12.5px; padding: 6px 11px; border-radius: 100px; border: 1px solid var(--border);
+  background: var(--surface-2); cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text);
+}
+.chip input { accent-color: var(--accent); }
+.chip.checked { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); }
+
+.years-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+
+/* =========================================================
+   Practice test — run
+   ========================================================= */
+.test-topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 12px 16px; margin-bottom: 16px; position: sticky; top: 66px; z-index: 5; box-shadow: var(--shadow-sm);
+}
+.test-progress { font-size: 13.5px; color: var(--text-muted); }
+.test-progress b { color: var(--navy-900); }
+.test-timer { font-family: var(--font-mono); font-size: 13.5px; color: var(--text-muted); }
+
+.qnav-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.qnav-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface);
+  font-family: var(--font-mono); font-size: 12px; cursor: pointer; color: var(--text-muted);
+}
+.qnav-btn.answered { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
+.qnav-btn.current { outline: 2px solid var(--link); outline-offset: 1px; }
+
+.test-nav-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
+
+/* =========================================================
+   Results
+   ========================================================= */
+.score-card {
+  background: var(--navy-900); color: #fff; border-radius: var(--radius-lg);
+  padding: 22px 24px; margin-bottom: 20px; display: flex; gap: 26px; flex-wrap: wrap; align-items: center;
+}
+.score-big { font-family: var(--font-display); font-size: 40px; font-weight: 700; }
+.score-big span { font-size: 18px; color: #9BA3C9; }
+.score-stats { display: flex; gap: 22px; flex-wrap: wrap; }
+.score-stat b { display: block; font-size: 18px; }
+.score-stat { font-size: 12px; color: #B7BCD6; }
+.score-stat.stat-correct b { color: #6FE0A6; }
+.score-stat.stat-incorrect b { color: #F0919A; }
+
+.unit-breakdown { margin-bottom: 22px; }
+.unit-bar-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; margin-bottom: 7px; }
+.unit-bar-row .u-name { width: 210px; flex-shrink: 0; color: var(--text-muted); }
+.unit-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 100px; overflow: hidden; }
+.unit-bar-fill { height: 100%; background: var(--success); border-radius: 100px; }
+.unit-bar-row .u-frac { width: 46px; text-align: right; font-family: var(--font-mono); color: var(--text-faint); flex-shrink: 0; }
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width: 700px) {
+  .main { padding: 20px 14px 50px; }
+  .topbar { padding: 12px 16px; }
+  .unit-bar-row .u-name { width: 130px; font-size: 11.5px; }
+  .test-topbar { top: 58px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <span>UGC NET · General Paper</span>
+    <span class="eyebrow">Practice Test</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-close-tab" id="closeTabBtn" type="button">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i> Close tab
+    </button>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- ---- Test config view ---- -->
+  <section id="testConfigView">
+    <div class="main-header"><h2>Practice Test</h2></div>
+    <div class="load-stat" id="loadedStat">Loading question bank…</div>
+
+    <div class="field">
+      <label>Include years in the question pool</label>
+      <div class="years-row" id="testYearChips"></div>
+    </div>
+
+    <div class="test-cards">
+      <div class="test-card">
+        <h3>Full Mock Test</h3>
+        <p class="desc">5 random questions from each of the 10 units (up to 50 questions) — mirrors the real Paper 1 pattern.</p>
+        <button class="btn btn-accent" id="startFullMock" type="button">Start Full Mock</button>
+      </div>
+
+      <div class="test-card">
+        <h3>Custom Practice</h3>
+        <p class="desc">Pick the units and how many questions you want, drawn randomly from the pool above.</p>
+        <div class="field">
+          <label for="customCount">Number of questions</label>
+          <input type="number" id="customCount" min="1" max="100" value="20">
+        </div>
+        <div class="field">
+          <label>Units to include</label>
+          <div class="chip-set" id="customUnitChips"></div>
+        </div>
+        <button class="btn btn-primary" id="startCustom" type="button">Start Custom Test</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---- Test run view ---- -->
+  <section id="testRunView" class="hidden">
+    <div class="test-topbar">
+      <div class="test-progress">Question <b id="qPos">1</b> of <b id="qTotal">50</b></div>
+      <div class="test-timer" id="testTimer">00:00</div>
+      <button class="btn btn-primary" id="submitTest" type="button">Submit Test</button>
+    </div>
+    <div class="qnav-grid" id="qnavGrid"></div>
+    <div id="testQuestionHolder"></div>
+    <div class="test-nav-actions">
+      <button class="btn btn-outline" id="prevQ" type="button">← Previous</button>
+      <button class="btn btn-outline" id="nextQ" type="button">Next →</button>
+    </div>
+  </section>
+
+  <!-- ---- Results view ---- -->
+  <section id="testResultView" class="hidden">
+    <div class="main-header"><h2>Test Results</h2></div>
+    <div class="score-card" id="scoreCard"></div>
+    <div class="unit-breakdown" id="unitBreakdown"></div>
+    <div class="q-actions" style="margin-bottom:18px;">
+      <button class="btn btn-primary" id="retakeTest" type="button">Retake this test</button>
+      <button class="btn btn-outline" id="backToSetup" type="button">Back to test setup</button>
+    </div>
+    <h3 style="margin-bottom:12px;">Review answers</h3>
+    <div id="reviewList"></div>
+  </section>
+
+</main>
+
+<script>
+/* =========================================================
+   UGC NET Paper 1 — Practice Test (standalone page)
+   Self-contained: loads manifest.json + year files itself.
+   ========================================================= */
+
+const State = {
+  manifest: null,
+  allQuestions: [],
+  test: null
+};
+
+let unitMap = {};
+
+/* ---------------------------------------------------------
+   Utilities
+   --------------------------------------------------------- */
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' fetching ' + url);
+  return res.json();
+}
+
+function switchView(id) {
+  ['testConfigView', 'testRunView', 'testResultView'].forEach(v => {
+    document.getElementById(v).classList.toggle('hidden', v !== id);
+  });
+}
+
+/* ---------------------------------------------------------
+   Passage box + explain panel (shared between test/review)
+   --------------------------------------------------------- */
+function isTableSeparatorLine(line) {
+  const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|');
+  return cells.length > 0 && cells.every(c => /^\s*:?-+:?\s*$/.test(c));
+}
+
+function splitMarkdownRow(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+
+function buildRichTextBody(text, opts = {}) {
+  const frag = document.createDocumentFragment();
+  const lines = String(text == null ? '' : text).split('\n');
+
+  let i = 0;
+  let paraBuffer = [];
+  let sawTable = false;
+
+  function flushParagraph() {
+    if (!paraBuffer.length) return;
+    const joined = paraBuffer.join('\n');
+    if (opts.inline && !sawTable && frag.childNodes.length === 0 && lines.length === paraBuffer.length) {
+      const span = document.createElement('span');
+      span.style.whiteSpace = 'pre-line';
+      span.textContent = joined;
+      frag.appendChild(span);
+    } else {
+      const p = document.createElement('p');
+      p.className = 'passage-para';
+      p.textContent = joined;
+      frag.appendChild(p);
+    }
+    paraBuffer = [];
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    const headingMatch = /^(#{1,4})\s+(.*)$/.exec(line.trim());
+    if (headingMatch) {
+      flushParagraph();
+      const h = document.createElement('div');
+      h.className = 'passage-subhead';
+      h.textContent = headingMatch[2];
+      frag.appendChild(h);
+      i++;
+      continue;
+    }
+
+    if (/^\s*\|.*\|\s*$/.test(line) && lines[i + 1] && isTableSeparatorLine(lines[i + 1])) {
+      flushParagraph();
+      sawTable = true;
+      const headerCells = splitMarkdownRow(line);
+      i += 2;
+      const bodyRows = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+        bodyRows.push(splitMarkdownRow(lines[i]));
+        i++;
+      }
+
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'passage-table-wrap';
+      const table = document.createElement('table');
+      table.className = 'passage-table';
+
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      headerCells.forEach(c => {
+        const th = document.createElement('th');
+        th.textContent = c;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      bodyRows.forEach(cells => {
+        const tr = document.createElement('tr');
+        cells.forEach(c => {
+          const td = document.createElement('td');
+          td.textContent = c;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      tableWrap.appendChild(table);
+      frag.appendChild(tableWrap);
+      continue;
+    }
+
+    if (line.trim() === '') {
+      flushParagraph();
+      i++;
+      continue;
+    }
+
+    paraBuffer.push(line);
+    i++;
+  }
+  flushParagraph();
+
+  return frag;
+}
+
+function passageBoxEl(text) {
+  const div = document.createElement('div');
+  div.className = 'passage-box';
+  const label = document.createElement('span');
+  label.className = 'passage-label';
+  label.textContent = 'Passage';
+  div.appendChild(label);
+  const body = document.createElement('div');
+  body.appendChild(buildRichTextBody(text));
+  div.appendChild(body);
+  return div;
+}
+
+function buildExplainPanel(q) {
+  const panel = document.createElement('div');
+  panel.className = 'explain-panel';
+
+  const ansLine = document.createElement('div');
+  ansLine.className = 'answer-line';
+  const b = document.createElement('b');
+  b.textContent = String.fromCharCode(65 + q.answer) + '. ' + q.options[q.answer];
+  ansLine.append('Correct answer: ', b);
+  panel.appendChild(ansLine);
+
+  const h4a = document.createElement('h4');
+  h4a.textContent = 'Explanation';
+  const expBody = document.createElement('div');
+  expBody.appendChild(buildRichTextBody(q.explanation || '', { inline: true }));
+  panel.appendChild(h4a);
+  panel.appendChild(expBody);
+
+  const h4b = document.createElement('h4');
+  h4b.textContent = 'Why each option is right / wrong';
+  const ul = document.createElement('ul');
+  ul.className = 'opt-notes';
+  q.options.forEach((opt, i) => {
+    const li = document.createElement('li');
+    if (i === q.answer) li.classList.add('is-correct');
+    const key = document.createElement('span');
+    key.className = 'opt-key mono';
+    key.textContent = String.fromCharCode(65 + i) + '.';
+    const txt = document.createElement('span');
+    txt.appendChild(buildRichTextBody((q.optionNotes && q.optionNotes[i]) || '', { inline: true }));
+    li.appendChild(key);
+    li.appendChild(txt);
+    ul.appendChild(li);
+  });
+  panel.appendChild(h4b);
+  panel.appendChild(ul);
+  return panel;
+}
+
+/* ---------------------------------------------------------
+   Question card — two modes: test / review
+   --------------------------------------------------------- */
+function renderQuestionCard(q, mode, extra = {}) {
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.dataset.qid = q.id;
+
+  const unitName = unitMap[q.unit] || ('Unit ' + q.unit);
+  const uVar = `var(--u${q.unit})`;
+
+  const meta = document.createElement('div');
+  meta.className = 'q-meta';
+  meta.innerHTML = `
+    <span class="tag">${escapeHTML(q.year)}</span>
+    <span class="tag">${escapeHTML(q.session)}</span>
+    ${q.subject ? `<span class="tag tag-subject">${escapeHTML(q.subject)}</span>` : ''}
+    <span class="tag"><span class="dot" style="background:${uVar}"></span>${escapeHTML(unitName)}</span>
+    <span class="q-id mono">${escapeHTML(q.id)}</span>`;
+  card.appendChild(meta);
+
+  const qText = document.createElement('div');
+  qText.className = 'q-text';
+  qText.appendChild(buildRichTextBody(q.question, { inline: true }));
+  card.appendChild(qText);
+
+  const optionsWrap = document.createElement('div');
+  optionsWrap.className = 'options';
+
+  const testAnswer = mode === 'test' ? State.test.answers[extra.index] : null;
+  const reviewAnswer = mode === 'review' ? extra.userAnswer : null;
+
+  q.options.forEach((optText, i) => {
+    const opt = document.createElement('button');
+    opt.type = 'button';
+    opt.className = 'option';
+    opt.dataset.idx = String(i);
+
+    let badgeText = '';
+    if (mode === 'test') {
+      if (testAnswer === i) opt.classList.add('selected');
+    } else if (mode === 'review') {
+      opt.classList.add('disabled');
+      if (i === q.answer) { opt.classList.add('reveal-correct'); badgeText = '✓ Correct'; }
+      else if (i === reviewAnswer) { opt.classList.add('reveal-incorrect'); badgeText = '✗ Your answer'; }
+    }
+
+    const key = document.createElement('span');
+    key.className = 'opt-key mono';
+    key.textContent = String.fromCharCode(65 + i);
+    const txt = document.createElement('span');
+    txt.textContent = optText;
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = badgeText;
+
+    opt.appendChild(key);
+    opt.appendChild(txt);
+    opt.appendChild(badge);
+    optionsWrap.appendChild(opt);
+  });
+  card.appendChild(optionsWrap);
+
+  if (mode === 'test') {
+    optionsWrap.addEventListener('click', (e) => {
+      const optEl = e.target.closest('.option');
+      if (!optEl) return;
+      State.test.answers[extra.index] = Number(optEl.dataset.idx);
+      renderCurrentTestQuestion();
+    });
+  }
+
+  if (mode === 'review') {
+    card.appendChild(buildExplainPanel(q));
+  }
+
+  return card;
+}
+
+/* ---------------------------------------------------------
+   Practice test — config
+   --------------------------------------------------------- */
+function chipHTML(group, value, label, dotColor) {
+  const dot = dotColor ? `<span class="dot" style="width:8px;height:8px;border-radius:50%;background:${dotColor}"></span>` : '';
+  return `<label class="chip checked"><input type="checkbox" data-group="${group}" value="${value}" checked>${dot}${escapeHTML(String(label))}</label>`;
+}
+
+function getCheckedChipValues(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input:checked`)].map(i => i.value);
+}
+
+function buildTestConfigUI() {
+  const years = [...new Set(State.allQuestions.map(q => q.year))].sort((a, b) => b - a);
+  document.getElementById('testYearChips').innerHTML =
+    years.map(y => chipHTML('testYear', y, y)).join('') ||
+    `<span style="color:var(--text-faint);font-size:13px;">No data loaded yet.</span>`;
+
+  document.getElementById('customUnitChips').innerHTML =
+    State.manifest.units.map(u => chipHTML('customUnit', u.id, u.name, `var(--u${u.id})`)).join('');
+
+  document.querySelectorAll('#testYearChips input, #customUnitChips input').forEach(inp => {
+    inp.addEventListener('change', () => inp.closest('.chip').classList.toggle('checked', inp.checked));
+  });
+}
+
+function getPool() {
+  const years = getCheckedChipValues('testYearChips').map(Number);
+  return State.allQuestions.filter(q => years.includes(q.year));
+}
+
+function startFullMock() {
+  const pool = getPool();
+  const qs = [];
+  State.manifest.units.forEach(u => {
+    const bucket = shuffle(pool.filter(q => q.unit === u.id));
+    qs.push(...bucket.slice(0, 5));
+  });
+  if (!qs.length) { alert('No questions available for the selected year(s) yet. Add some data first!'); return; }
+  startTest(shuffle(qs));
+}
+
+function startCustom() {
+  const pool = getPool();
+  const units = getCheckedChipValues('customUnitChips').map(Number);
+  const count = Math.max(1, parseInt(document.getElementById('customCount').value, 10) || 20);
+  const candidates = shuffle(pool.filter(q => units.includes(q.unit)));
+  const qs = candidates.slice(0, count);
+  if (!qs.length) { alert('No questions match the selected units/years yet.'); return; }
+  startTest(qs);
+}
+
+/* ---------------------------------------------------------
+   Practice test — run
+   --------------------------------------------------------- */
+function startTest(questions) {
+  State.test = {
+    questions,
+    answers: new Array(questions.length).fill(null),
+    current: 0,
+    startTime: Date.now(),
+    timerInterval: null,
+    finished: false
+  };
+  switchView('testRunView');
+  renderCurrentTestQuestion();
+  startTimer();
+}
+
+function renderCurrentTestQuestion() {
+  const t = State.test;
+  const idx = t.current;
+  const q = t.questions[idx];
+
+  document.getElementById('qPos').textContent = idx + 1;
+  document.getElementById('qTotal').textContent = t.questions.length;
+
+  const holder = document.getElementById('testQuestionHolder');
+  holder.innerHTML = '';
+  if (q.passage) holder.appendChild(passageBoxEl(q.passage));
+  holder.appendChild(renderQuestionCard(q, 'test', { index: idx }));
+
+  document.getElementById('prevQ').disabled = idx === 0;
+  document.getElementById('nextQ').textContent = idx === t.questions.length - 1 ? 'Finish →' : 'Next →';
+
+  updateQnavGrid();
+}
+
+function updateQnavGrid() {
+  const t = State.test;
+  const grid = document.getElementById('qnavGrid');
+  grid.innerHTML = '';
+  t.questions.forEach((q, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'qnav-btn' + (t.answers[i] != null ? ' answered' : '') + (i === t.current ? ' current' : '');
+    b.textContent = String(i + 1);
+    b.addEventListener('click', () => { t.current = i; renderCurrentTestQuestion(); });
+    grid.appendChild(b);
+  });
+}
+
+function startTimer() {
+  const el = document.getElementById('testTimer');
+  clearInterval(State.test.timerInterval);
+  State.test.timerInterval = setInterval(() => {
+    const secs = Math.floor((Date.now() - State.test.startTime) / 1000);
+    const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+    const ss = String(secs % 60).padStart(2, '0');
+    el.textContent = `${mm}:${ss}`;
+  }, 1000);
+}
+
+function submitTest() {
+  clearInterval(State.test.timerInterval);
+  State.test.finished = true;
+  State.test.elapsedMs = Date.now() - State.test.startTime;
+  renderResults();
+  switchView('testResultView');
+}
+
+/* ---------------------------------------------------------
+   Practice test — results
+   --------------------------------------------------------- */
+function renderResults() {
+  const t = State.test;
+  let correct = 0, incorrect = 0, unanswered = 0;
+  const unitStats = {};
+
+  t.questions.forEach((q, i) => {
+    const a = t.answers[i];
+    if (a == null) unanswered++;
+    else if (a === q.answer) correct++;
+    else incorrect++;
+    unitStats[q.unit] = unitStats[q.unit] || { correct: 0, total: 0 };
+    unitStats[q.unit].total++;
+    if (a === q.answer) unitStats[q.unit].correct++;
+  });
+
+  const total = t.questions.length;
+  const pct = total ? Math.round((correct / total) * 100) : 0;
+  const mins = Math.floor(t.elapsedMs / 60000);
+  const secs = Math.floor((t.elapsedMs % 60000) / 1000);
+
+  document.getElementById('scoreCard').innerHTML = `
+    <div class="score-big">${pct}<span>%</span></div>
+    <div class="score-stats">
+      <div class="score-stat stat-correct"><b>${correct}</b>Correct</div>
+      <div class="score-stat stat-incorrect"><b>${incorrect}</b>Incorrect</div>
+      <div class="score-stat"><b>${unanswered}</b>Unanswered</div>
+      <div class="score-stat"><b>${total}</b>Total</div>
+      <div class="score-stat"><b>${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</b>Time taken</div>
+    </div>`;
+
+  const ub = document.getElementById('unitBreakdown');
+  ub.innerHTML = '';
+  Object.keys(unitStats).sort((a, b) => a - b).forEach(uid => {
+    const st = unitStats[uid];
+    const pctU = st.total ? Math.round((st.correct / st.total) * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'unit-bar-row';
+    row.innerHTML = `<span class="u-name">${escapeHTML(unitMap[uid] || ('Unit ' + uid))}</span>
+      <span class="unit-bar-track"><span class="unit-bar-fill" style="width:${pctU}%;"></span></span>
+      <span class="u-frac">${st.correct}/${st.total}</span>`;
+    ub.appendChild(row);
+  });
+
+  const rl = document.getElementById('reviewList');
+  rl.innerHTML = '';
+  let lastPassage = null;
+  t.questions.forEach((q, i) => {
+    if (q.passage && q.passage !== lastPassage) rl.appendChild(passageBoxEl(q.passage));
+    lastPassage = q.passage || null;
+    rl.appendChild(renderQuestionCard(q, 'review', { userAnswer: t.answers[i] }));
+  });
+}
+
+/* ---------------------------------------------------------
+   Static event wiring
+   --------------------------------------------------------- */
+function wireStaticEvents() {
+  document.getElementById('startFullMock').addEventListener('click', startFullMock);
+  document.getElementById('startCustom').addEventListener('click', startCustom);
+
+  document.getElementById('prevQ').addEventListener('click', () => {
+    const t = State.test;
+    if (t.current > 0) { t.current--; renderCurrentTestQuestion(); }
+  });
+  document.getElementById('nextQ').addEventListener('click', () => {
+    const t = State.test;
+    if (t.current < t.questions.length - 1) { t.current++; renderCurrentTestQuestion(); }
+    else submitTest();
+  });
+  document.getElementById('submitTest').addEventListener('click', submitTest);
+
+  document.getElementById('retakeTest').addEventListener('click', () => startTest(shuffle(State.test.questions.slice())));
+  document.getElementById('backToSetup').addEventListener('click', () => switchView('testConfigView'));
+
+  document.getElementById('closeTabBtn').addEventListener('click', () => window.close());
+}
+
+/* ---------------------------------------------------------
+   Init — load manifest + every year file it lists
+   --------------------------------------------------------- */
+async function init() {
+  try {
+    State.manifest = await fetchJSON('manifest.json');
+  } catch (err) {
+    document.getElementById('testConfigView').innerHTML = `<div class="empty-state">
+      <h3>Could not load manifest.json</h3>
+      <p>Serve this folder over HTTP (a local server or GitHub Pages) rather than opening test.html directly as a file, and make sure manifest.json exists alongside it.</p></div>`;
+    return;
+  }
+
+  unitMap = {};
+  State.manifest.units.forEach(u => { unitMap[u.id] = u.name; });
+
+  const yearFiles = State.manifest.years || [];
+  const results = await Promise.allSettled(yearFiles.map(y => fetchJSON(y.file)));
+  State.allQuestions = [];
+  results.forEach((r, idx) => {
+    if (r.status === 'fulfilled' && r.value && Array.isArray(r.value.questions)) {
+      const yearNum = r.value.year || yearFiles[idx].year;
+      const fileSubject = r.value.subject || 'General Paper';
+      r.value.questions.forEach(q => State.allQuestions.push({
+        ...q,
+        year: yearNum,
+        subject: q.subject || fileSubject
+      }));
+    } else {
+      console.warn('Could not load', yearFiles[idx].file, r.reason);
+    }
+  });
+
+  document.getElementById('loadedStat').textContent =
+    `${State.allQuestions.length} questions loaded from ${yearFiles.length} files`;
+
+  buildTestConfigUI();
+  wireStaticEvents();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
