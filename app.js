@@ -422,6 +422,27 @@ function resetFilters() {
 }
 
 /* ---------------------------------------------------------
+   Textbooks — sidebar list, click opens the PDF in a new tab.
+   Source list comes from manifest.json's "textbooks" array:
+   { "name": "...", "file": "textbooks/whatever.pdf" }
+   --------------------------------------------------------- */
+function buildTextbookUI() {
+  const body = document.getElementById('textbookListBody');
+  const books = State.manifest.textbooks || [];
+
+  if (!books.length) {
+    body.innerHTML = `<span style="color:#7F86A6;font-size:12.5px;">No textbooks uploaded yet.</span>`;
+    return;
+  }
+
+  body.innerHTML = books.map(b => `
+    <a class="textbook-row" href="${escapeHTML(b.file)}" target="_blank" rel="noopener">
+      <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+      <span>${escapeHTML(b.name)}</span>
+    </a>`).join('');
+}
+
+/* ---------------------------------------------------------
    Browse view
    --------------------------------------------------------- */
 function applyFilters() {
@@ -532,6 +553,7 @@ async function init() {
     `${State.allQuestions.length} questions loaded from ${yearFiles.length} files`;
 
   buildFilterUI();
+  buildTextbookUI();
   renderBrowseList();
   wireStaticEvents();
 }
